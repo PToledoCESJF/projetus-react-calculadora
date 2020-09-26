@@ -1,17 +1,57 @@
 import React, { useState } from 'react';
 import './calculadora.css';
 import { Jumbotron, Container, Row, Col, Button, Form } from 'react-bootstrap';
-
+import CalculadoraService from './service/calculadora-service'
 function Calculadora() {
 
+  const [calcular, concatenarNumero, SOMA, SUBTRACAO, MULTIPLICACAO, DIVISAO] = CalculadoraService();
+
   const [txtNumeros, setTxtNumeros] = useState('0');
+  const [numeros1, setNumero1] = useState('0');
+  const [numeros2, setNumero2] = useState(null);
+  const [operacao, setOperacao] = useState(null);
+  
 
   function adicionarNumero(numero){
-    setTxtNumeros(txtNumeros + numero);
+    let resultado;
+    if (operacao === null) {
+      resultado = concatenarNumero(numeros1, numero);
+      setNumero1(resultado);
+    } else {
+      resultado = concatenarNumero(numeros2, numero);
+      setNumero2(resultado);
+    }
+    setTxtNumeros(resultado);
   }
 
   function definirOperacao(op){
-    setTxtNumeros(op);
+    // apenas define a operação caso ela não exista
+    if (operacao === null) {
+      setOperacao(op);
+      return;
+    }
+    // caso operação estiver definida e o numero 2 selecionado, realiza o calculo da operação
+    if (numeros2 !== null) {
+      const resultado = calcular(parseFloat(numeros1), parseFloat(numeros2), operacao);
+      setOperacao(op);
+      setNumero1(resultado.toString());
+      setNumero2(null);
+      setTxtNumeros(resultado.toString());
+    }
+  }
+
+  function acaoCalcular() {
+    if (numeros2 === null) return;
+
+    const resultado = calcular(parseFloat(numeros1), parseFloat(numeros2), operacao);
+    setTxtNumeros(resultado);
+  }
+
+  function limpar() {
+    setTxtNumeros('0');
+    setNumero1('0');
+    setNumero2(null);
+    setOperacao(null);
   }
 
   return (
@@ -25,7 +65,7 @@ function Calculadora() {
       <Container>
         <Row>
           <Col xs="3" onClick={() => adicionarNumero('')}>
-            <Button variant="danger" onClick={() => adicionarNumero('')}>C</Button>
+            <Button variant="danger" onClick={limpar}>C</Button>
           </Col>
           <Col xs="9" onClick={() => adicionarNumero('')}>
             <Form.Control type="text"
@@ -55,8 +95,8 @@ function Calculadora() {
         </Row>
         <Row>
           <Col><Button variant="light" onClick={() => adicionarNumero('0')}>0</Button></Col>
-          <Col><Button variant="light">.</Button></Col>
-          <Col><Button variant="success">=</Button></Col>
+          <Col><Button variant="light" onClick={() => adicionarNumero('.')}>.</Button></Col>
+          <Col><Button variant="success" onClick={acaoCalcular}>=</Button></Col>
           <Col><Button variant="warning" onClick={() => definirOperacao('+')}>+</Button></Col>
         </Row>
       </Container>
